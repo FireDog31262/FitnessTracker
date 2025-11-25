@@ -1,11 +1,16 @@
 <mat-toolbar color="primary" class="header-toolbar">
   <div class="header__brand header__desktop-only">
-    <a routerLink="/" class="header__logo">Simple Fitness Tracker</a>
+    <a routerLink="/" class="header__logo">
+      <img src="/favicon.svg" alt="Logo" class="header__icon">
+      Fitness Tracker
+    </a>
   </div>
   <span class="header__spacer"></span>
   <div class="header__links header__desktop-only">
     @if (loggedIn()) {
     <a routerLink="/training" class="header__link">Training</a>
+    <a routerLink="/user-exercises" class="header__link">Add Exercise</a>
+    <a routerLink="/profile" class="header__link">Profile</a>
     <a href="#" (click)="logOut()" class="header__link">Log Out</a>
     } @else {
     <a routerLink="/signup" class="header__link">Sign Up</a>
@@ -13,7 +18,10 @@
     }
   </div>
   <div class="header__mobile-toggle">
-    <a routerLink="/" class="header__logo">Simple Fitness Tracker</a>
+    <a routerLink="/" class="header__logo">
+      <img src="/favicon.svg" alt="Logo" class="header__icon">
+      Fitness Tracker
+    </a>
     <button mat-icon-button class="menu-toggle" (click)="sidenav().opened ? sidenav().close() : sidenav().open()">
       <mat-icon class="icon-close" [@rotateCloseIcon]="closeIconRotateState()">
         close

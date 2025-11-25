@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Firestore, addDoc, collection, getDocs, query, where } from '@angular/fire/firestore';
-import { EMPTY, from, of } from 'rxjs';
+import { EMPTY, from, of, forkJoin } from 'rxjs';
 import { catchError, map, startWith, switchMap, tap, withLatestFrom } from 'rxjs/operators';
-import { LOAD_AVAILABLE_EXERCISES, LOAD_FINISHED_EXERCISES, PERSIST_EXERCISE_RESULT, PersistExerciseResult, LoadFinishedExercises } from './training.actions';
+import { LOAD_AVAILABLE_EXERCISES, LOAD_FINISHED_EXERCISES, PERSIST_EXERCISE_RESULT, PersistExerciseResult, LoadFinishedExercises, ADD_USER_EXERCISE, AddUserExercise, LoadAvailableExercises } from './training.actions';
 import * as UI from '../../shared/ui.actions';
 import { TrainingService } from './training.service';
 import { Exercise } from './excercise.model';
@@ -20,9 +20,19 @@ export class TrainingEffects {
   loadAvailableExercises$ = createEffect(() =>
     this.actions$.pipe(
       ofType(LOAD_AVAILABLE_EXERCISES),
-      switchMap(() =>
-        from(getDocs(collection(this.firestore, 'availableExcercises'))).pipe(
-          map((snapshot) => snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Exercise)),
+      withLatestFrom(this.store.select(fromRoot.getUser)),
+      switchMap(([, user]) => {
+        // Only load user-defined exercises, ignoring global defaults
+        let customExercises$ = of([] as Exercise[]);
+        if (user) {
+          const customCollection = collection(this.firestore, 'userExercises');
+          const q = query(customCollection, where('userId', '==', user.id));
+          customExercises$ = from(getDocs(q)).pipe(
+            map((snapshot) => snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }) as Exercise))
+          );
+        }
+
+        return customExercises$.pipe(
           tap((exercises) => this.trainingService.setAvailableExercises(exercises)),
           map(() => new UI.StopLoading()),
           startWith(new UI.StartLoading()),
@@ -38,8 +48,8 @@ export class TrainingEffects {
               })
             );
           })
-        )
-      )
+        );
+      })
     )
   );
 
@@ -119,4 +129,35 @@ export class TrainingEffects {
       )
     )
   );
+
+  addUserExercise$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ADD_USER_EXERCISE),
+      switchMap((action: AddUserExercise) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...exerciseData } = action.payload.exercise;
+        return from(addDoc(collection(this.firestore, 'userExercises'), exerciseData)).pipe(
+          switchMap(() => [
+            new LoadAvailableExercises(),
+            new UI.ShowSnackbar({
+              message: 'User exercise added successfully.',
+              action: 'Close',
+              duration: 3000
+            })
+          ]),
+          catchError((error) => {
+            console.error('❌ Error adding user exercise:', error);
+            return of(
+              new UI.ShowSnackbar({
+                message: 'Adding user exercise failed. Please try again.',
+                action: 'Close',
+                duration: 5000
+              })
+            );
+          })
+        );
+      })
+    )
+  );
 }
+

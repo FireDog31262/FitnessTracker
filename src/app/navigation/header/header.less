@@ -31,6 +31,13 @@ a[routerLink] {
 	font-weight: 500;
 }
 
+.header__icon {
+	height: 24px;
+	width: 24px;
+	margin-right: 8px;
+	vertical-align: middle;
+}
+
 .header__mobile-toggle {
 	display: flex;
 	align-items: center;
@@ -55,6 +62,16 @@ a[routerLink] {
 @media (max-width: 599px) {
 	.header__desktop-only {
 		display: none;
+	}
+
+	.header__spacer {
+		display: none;
+	}
+
+	.header__mobile-toggle {
+		width: 100%;
+		justify-content: space-between;
+		margin-left: 0;
 	}
 }
 

@@ -1,6 +1,13 @@
 <section class="current-training">
+  @if (isCustom()) {
+  <mat-progress-spinner mode="indeterminate" />
+  <h1>{{ elapsedSeconds() * 1000 | date:'mm:ss' }}</h1>
+  } @else {
   <mat-progress-spinner mode="determinate" [value]="progress()" />
-  <h1>{{progress()}}%</h1>
+  <h1>{{progress() | number:'1.0-0'}}%</h1>
+  }
   <p>Keep on Going, you can do this!</p>
-  <button mat-raised-button color="accent" type="button" (click)="onStop()">Stop</button>
+  <button mat-raised-button color="accent" type="button" (click)="onStop()">
+    {{ isCustom() ? 'Finish' : 'Stop' }}
+  </button>
 </section>

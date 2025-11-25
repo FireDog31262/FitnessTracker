@@ -1,0 +1,71 @@
+<section class="profile-form">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>User Profile</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+                <mat-form-field>
+                    <mat-label>Name</mat-label>
+                    <input matInput placeholder="Name" formControlName="name">
+                    <mat-error>Name is required.</mat-error>
+                </mat-form-field>
+
+                <mat-form-field>
+                    <mat-label>Birthdate</mat-label>
+                    <input matInput [matDatepicker]="picker" placeholder="Birthdate" formControlName="birthday">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    <mat-error>Birthdate is required.</mat-error>
+                </mat-form-field>
+
+                <div class="weight-container" style="display: flex; gap: 16px;">
+                    <mat-form-field style="flex: 1;">
+                        <mat-label>Weight</mat-label>
+                        <input type="number" matInput placeholder="Weight" formControlName="weight">
+                    </mat-form-field>
+
+                    <mat-form-field style="width: 100px;">
+                        <mat-label>Unit</mat-label>
+                        <mat-select formControlName="weightUnit">
+                            <mat-option value="kg">kg</mat-option>
+                            <mat-option value="lb">lb</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div class="height-container" style="display: flex; gap: 16px;">
+                    <ng-container *ngIf="profileForm.get('heightUnit')?.value === 'cm'">
+                        <mat-form-field style="flex: 1;">
+                            <mat-label>Height (cm)</mat-label>
+                            <input type="number" matInput placeholder="Height (cm)" formControlName="height">
+                        </mat-form-field>
+                    </ng-container>
+
+                    <ng-container *ngIf="profileForm.get('heightUnit')?.value === 'ft_in'">
+                        <mat-form-field style="flex: 1;">
+                            <mat-label>Feet</mat-label>
+                            <input type="number" matInput placeholder="Feet" formControlName="heightFeet">
+                        </mat-form-field>
+                        <mat-form-field style="flex: 1;">
+                            <mat-label>Inches</mat-label>
+                            <input type="number" matInput placeholder="Inches" formControlName="heightInches">
+                        </mat-form-field>
+                    </ng-container>
+
+                    <mat-form-field style="width: 120px;">
+                        <mat-label>Unit</mat-label>
+                        <mat-select formControlName="heightUnit">
+                            <mat-option value="cm">cm</mat-option>
+                            <mat-option value="ft_in">ft & in</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <button type="submit" mat-raised-button color="primary" [disabled]="profileForm.invalid || isLoading()">
+                    Save Changes
+                </button>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</section>

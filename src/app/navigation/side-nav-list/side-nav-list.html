@@ -4,6 +4,14 @@
     <mat-icon>fitness_center</mat-icon>
     Training
   </a>
+  <a mat-list-item routerLink="/user-exercises" (click)="sidenav().close()">
+    <mat-icon>add_circle_outline</mat-icon>
+    Add Exercise
+  </a>
+  <a mat-list-item routerLink="/profile" (click)="sidenav().close()">
+    <mat-icon>person</mat-icon>
+    Profile
+  </a>
   <button mat-list-item (click)="logout()">
     <mat-icon>eject</mat-icon>
     Log Out

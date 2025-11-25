@@ -19,5 +19,15 @@ export const routes: Routes = [
     loadComponent: () => import('./Components/training/training/training').then(m => m.Training),
     canActivate: [authGuard]
   },
+  {
+    path: 'user-exercises',
+    loadComponent: () => import('./Components/training/user-exercises/user-exercises').then(m => m.UserExercises),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./Components/auth/profile/profile').then(m => m.Profile),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '' } // Wildcard route for 404 handling
 ];

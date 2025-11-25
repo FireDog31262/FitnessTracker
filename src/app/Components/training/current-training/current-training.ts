@@ -1,20 +1,24 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, effect, inject, signal, computed } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { StopTrainingDialog } from './stop-training-dialog/stop-training-dialog';
 import { MatButtonModule } from "@angular/material/button";
 import { TrainingService } from '../training.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DatePipe, DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-current-training',
-  imports: [MatProgressSpinnerModule, MatButtonModule],
+  imports: [MatProgressSpinnerModule, MatButtonModule, DatePipe, DecimalPipe],
   templateUrl: './current-training.html',
   styleUrl: './current-training.less',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CurrentTraining implements OnDestroy {
   protected readonly progress = signal(0);
+  protected readonly elapsedSeconds = signal(0);
+  protected readonly isCustom = signal(false);
+
   private timer: number | undefined;
   private readonly dialog = inject(MatDialog);
   private readonly trainingService = inject(TrainingService);
@@ -25,22 +29,31 @@ export class CurrentTraining implements OnDestroy {
       const exercise = this.trainingService.runningExercise();
       this.stopTimer();
       this.progress.set(0);
+      this.elapsedSeconds.set(0);
 
-      if (!exercise || typeof exercise.Duration !== 'number') {
+      if (!exercise) {
         return;
       }
 
+      this.isCustom.set(exercise.Duration === undefined || exercise.Duration === null);
       this.startTimer(exercise.Duration);
     });
   }
 
   onStop() {
     const exercise = this.trainingService.runningExercise();
-    if (!exercise || typeof exercise.Duration !== 'number') {
+    if (!exercise) {
       return;
     }
 
     this.stopTimer();
+
+    if (this.isCustom()) {
+      // For custom exercises, "Stop" means "Finish"
+      this.trainingService.completeExercise(this.elapsedSeconds());
+      return;
+    }
+
     const dialogRef = this.dialog.open(StopTrainingDialog, { data: { progress: this.progress() } });
     dialogRef
       .afterClosed()
@@ -58,18 +71,24 @@ export class CurrentTraining implements OnDestroy {
     this.stopTimer();
   }
 
-  private startTimer(durationMinutes: number) {
+  private startTimer(durationSeconds?: number) {
     this.stopTimer();
-    const step = (durationMinutes / 100) * 1000;
+
+    // If duration is provided (Standard Exercise), we calculate progress
+    // If not (Custom Exercise), we just count up
+
+    const step = 1000;
     this.timer = window.setInterval(() => {
-      const next = this.progress() + 5;
-      if (next >= 100) {
-        this.progress.set(100);
-        this.stopTimer();
-        this.trainingService.completeExercise();
-        return;
+      this.elapsedSeconds.update(v => v + 1);
+
+      if (durationSeconds) {
+        const newProgress = (this.elapsedSeconds() / durationSeconds) * 100;
+        this.progress.set(newProgress);
+        if (newProgress >= 100) {
+          this.trainingService.completeExercise();
+          this.stopTimer();
+        }
       }
-      this.progress.set(next);
     }, step);
   }
 

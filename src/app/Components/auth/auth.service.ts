@@ -31,7 +31,7 @@ export class AuthService {
         const userDocSnap = await getDoc(userDocRef);
 
         const authedUser = this.buildUserFromAuth(result.user.uid, result.user.email, result.user.displayName, userDocSnap.exists() ? userDocSnap.data() : null);
-        this.handleAuthSuccess(authedUser);
+        this.handleAuthSuccess(authedUser, '/training');
       })
       .catch(error => this.handleAuthFailure('Login', error));
   }
@@ -56,6 +56,34 @@ export class AuthService {
     return currentUser ? { ...currentUser } : null;
   }
 
+  async updateProfile(userId: string, data: Partial<User>) {
+    this.store.dispatch(new UI.StartLoading());
+    try {
+      const updateData: any = { ...data };
+      // Remove id and email from update if present, as they shouldn't be changed here easily
+      delete updateData.id;
+      delete updateData.email;
+
+      await setDoc(doc(this.firestore, "users", userId), updateData, { merge: true });
+
+      // Update local state
+      const currentUser = this.getUser();
+      if (currentUser) {
+        const updatedUser = { ...currentUser, ...data };
+        this.store.dispatch(new AuthActions.SetAuthenticated({ user: updatedUser }));
+      }
+
+      this.store.dispatch(new UI.StopLoading());
+      this.store.dispatch(new UI.ShowSnackbar({
+        message: 'Profile updated successfully.',
+        action: 'Close',
+        duration: 3000
+      }));
+    } catch (error) {
+      this.handleAuthFailure('Profile Update', error);
+    }
+  }
+
   async registerUser(userData: Omit<User, 'id'> & { password: string }) {
     this.store.dispatch(new UI.StartLoading());
     try {
@@ -65,11 +93,15 @@ export class AuthService {
 
       const uid = firebaseUser.uid; // The unique ID from Firebase Authentication!
 
-      // Step 2: Create user document in Cloud Firestore
+      const age = new Date().getFullYear() - userData.birthday.getFullYear();
+      if (age < 18) {
+        throw new Error('User must be at least 18 years old to register.');
+      }
       const userProfileData = {
         email: userData.email,
         name: userData.name,
         birthdate: userData.birthday, // Use server timestamp for consistency
+        age: age,
         // Add any other initial user profile data here
       };
 
@@ -77,7 +109,7 @@ export class AuthService {
       await setDoc(doc(this.firestore, "users", uid), userProfileData);
 
       const newUser = this.buildUserFromAuth(uid, userData.email, userData.name, userProfileData);
-      this.handleAuthSuccess(newUser);
+      this.handleAuthSuccess(newUser, '/user-exercises');
       console.log("Successfully registered user and created profile for UID:", uid);
     } catch (error) {
       this.handleAuthFailure('Registration', error);
@@ -87,6 +119,10 @@ export class AuthService {
   private buildUserFromAuth(uid: string, email: string | null, displayName: string | null, firestoreData: Record<string, unknown> | null): User {
     const nameFromProfile = firestoreData?.['name'] ?? displayName ?? '';
     const birthdate = firestoreData?.['birthdate'];
+    const weight = firestoreData?.['weight'] as number | undefined;
+    const weightUnit = firestoreData?.['weightUnit'] as 'kg' | 'lb' | undefined;
+    const height = firestoreData?.['height'] as number | undefined;
+    const heightUnit = firestoreData?.['heightUnit'] as 'cm' | 'ft_in' | undefined;
 
     let birthdayDate = new Date();
     if (birthdate) {
@@ -102,14 +138,18 @@ export class AuthService {
       id: uid,
       email: email ?? '',
       name: String(nameFromProfile ?? ''),
-      birthday: birthdayDate
+      birthday: birthdayDate,
+      weight,
+      weightUnit,
+      height,
+      heightUnit
     };
   }
 
-  private handleAuthSuccess(user: User) {
+  private handleAuthSuccess(user: User, redirectUrl: string) {
     this.store.dispatch(new UI.StopLoading());
     this.store.dispatch(new AuthActions.SetAuthenticated({ user }));
-    this.router.navigate(['/training']);
+    this.router.navigate([redirectUrl]);
   }
 
   private handleAuthFailure(context: string, error: unknown) {

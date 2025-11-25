@@ -52,7 +52,7 @@
               <th scope="col" [attr.aria-sort]="ariaSort('duration')">
                 <button type="button" class="past-training__sort-button" (click)="toggleSort('duration', $event)"
                   title="Click to sort by Duration. Shift+click to include, Ctrl/Cmd+click to remove.">
-                  <span>Duration (min)</span>
+                  <span>Duration</span>
                   @if (sortMeta('duration'); as durationSort) {
                   <mat-icon class="past-training__sort-icon">
                     {{ durationSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
@@ -73,18 +73,6 @@
                   }
                 </button>
               </th>
-              <th scope="col" [attr.aria-sort]="ariaSort('state')">
-                <button type="button" class="past-training__sort-button" (click)="toggleSort('state', $event)"
-                  title="Click to sort by State. Shift+click to include, Ctrl/Cmd+click to remove.">
-                  <span>State</span>
-                  @if (sortMeta('state'); as stateSort) {
-                  <mat-icon class="past-training__sort-icon">
-                    {{ stateSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-                  </mat-icon>
-                  <span class="past-training__sort-order" aria-hidden="true">{{ stateSort.position }}</span>
-                  }
-                </button>
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -99,9 +87,8 @@
             <tr>
               <td>{{ exercise.date | date: 'mediumDate' }}</td>
               <td>{{ exercise.Name }}</td>
-              <td>{{ exercise.Duration }}</td>
-              <td>{{ exercise.calories }}</td>
-              <td class="past-training__state">{{ exercise.state || 'completed' }}</td>
+              <td>{{ formatDuration(exercise.Duration) }}</td>
+              <td>{{ exercise.calories | number:'1.2-2' }}</td>
             </tr>
             }
             }

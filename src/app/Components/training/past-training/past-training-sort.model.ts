@@ -1,4 +1,4 @@
-export type SortColumn = 'date' | 'name' | 'duration' | 'calories' | 'state';
+export type SortColumn = 'date' | 'name' | 'duration' | 'calories';
 export type SortDirection = 'asc' | 'desc';
 export interface SortDescriptor {
   column: SortColumn;
@@ -12,7 +12,7 @@ export interface PastTrainingPreferences {
   pageIndex: number;
 }
 
-const VALID_SORT_COLUMNS: ReadonlyArray<SortColumn> = ['date', 'name', 'duration', 'calories', 'state'];
+const VALID_SORT_COLUMNS: ReadonlyArray<SortColumn> = ['date', 'name', 'duration', 'calories'];
 const VALID_SORT_DIRECTIONS: ReadonlyArray<SortDirection> = ['asc', 'desc'];
 
 export const DEFAULT_SORT: ReadonlyArray<SortDescriptor> = [

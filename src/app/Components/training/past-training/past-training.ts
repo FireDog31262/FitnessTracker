@@ -62,7 +62,6 @@ export class PastTraining implements OnInit, OnDestroy {
     return data.filter((exercise) => {
       const haystack = [
         exercise.Name,
-        exercise.state,
         exercise.date?.toISOString(),
         exercise.Duration?.toString(),
         exercise.calories?.toString()
@@ -86,8 +85,6 @@ export class PastTraining implements OnInit, OnDestroy {
           return exercise.Duration ?? 0;
         case 'calories':
           return exercise.calories ?? 0;
-        case 'state':
-          return (exercise.state ?? 'completed').toLowerCase();
         case 'date':
         default:
           return exercise.date ? exercise.date.getTime() : 0;
@@ -246,6 +243,18 @@ export class PastTraining implements OnInit, OnDestroy {
     this.sortOrder.set(defaultSortOrder());
     this.pageIndex.set(0);
     this.markPreferencesDirty();
+  }
+
+  protected formatDuration(duration: number | undefined): string {
+    if (!duration) {
+      return '0s';
+    }
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
   }
 
   protected trackExercise(index: number, exercise: Exercise) {
