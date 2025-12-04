@@ -3,7 +3,8 @@ export interface User {
   email: string;
   name: string;
   birthday: Date;
-  weight?: number;
+  currentWeight?: number;
+  goalWeight?: number;
   weightUnit?: 'kg' | 'lb';
   height?: number;
   heightUnit?: 'cm' | 'ft_in';

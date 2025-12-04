@@ -7,9 +7,12 @@ export interface SortDescriptor {
 
 export interface PastTrainingPreferences {
   sortOrder: SortDescriptor[];
-  filter: string;
-  pageSize: number;
-  pageIndex: number;
+  aerobicFilter: string;
+  resistanceFilter: string;
+  aerobicPageSize: number;
+  aerobicPageIndex: number;
+  resistancePageSize: number;
+  resistancePageIndex: number;
 }
 
 const VALID_SORT_COLUMNS: ReadonlyArray<SortColumn> = ['date', 'name', 'duration', 'calories'];
@@ -57,8 +60,11 @@ export function defaultSortOrder(): SortDescriptor[] {
 export function defaultPreferences(): PastTrainingPreferences {
   return {
     sortOrder: defaultSortOrder(),
-    filter: '',
-    pageSize: DEFAULT_PAGE_SIZE,
-    pageIndex: DEFAULT_PAGE_INDEX
+    aerobicFilter: '',
+    resistanceFilter: '',
+    aerobicPageSize: DEFAULT_PAGE_SIZE,
+    aerobicPageIndex: DEFAULT_PAGE_INDEX,
+    resistancePageSize: DEFAULT_PAGE_SIZE,
+    resistancePageIndex: DEFAULT_PAGE_INDEX
   };
 }

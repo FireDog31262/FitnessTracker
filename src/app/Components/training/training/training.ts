@@ -4,10 +4,11 @@ import { NewTraining } from "../new-training/new-training";
 import { CurrentTraining } from "../current-training/current-training";
 import { PastTraining } from '../past-training/past-training';
 import { TrainingService } from '../training.service';
+import { TrainingAnalyticsComponent } from '../training-analytics/training-analytics';
 
 @Component({
   selector: 'app-training',
-  imports: [MatTabsModule, NewTraining, CurrentTraining, PastTraining],
+  imports: [MatTabsModule, NewTraining, CurrentTraining, PastTraining, TrainingAnalyticsComponent],
   templateUrl: './training.html',
   styleUrl: './training.less',
   changeDetection: ChangeDetectionStrategy.OnPush

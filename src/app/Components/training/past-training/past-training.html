@@ -1,103 +1,97 @@
 <section class="past-training">
   <mat-card appearance="outlined">
     <mat-card-content>
-      <mat-form-field class="past-training__filter">
-        <mat-label>Filter Exercises</mat-label>
-        <input matInput placeholder="Search by name, state, or date" [value]="filter()"
-          (input)="updateFilter($any($event.target).value)" />
-        @if (filter()) {
-        <button mat-icon-button matSuffix (click)="clearFilter()" type="button" class="clear-button">
-          <mat-icon class="clear-icon">close</mat-icon>
-        </button>
-        }
-      </mat-form-field>
-      <div class="past-training__preferences-row">
-        <p class="past-training__sort-hint">Click a column to sort. Hold Shift to add secondary sorts and use Ctrl/Cmd
-          to
-          remove a column. Preferences sync with your account.</p>
-        <button type="button" mat-stroked-button class="past-training__reset-button" (click)="clearSortOrder()"
-          [disabled]="!hasCustomSort()">
-          Reset sorts
-        </button>
-      </div>
-
-      <div class="past-training__table-wrapper" role="region" aria-live="polite">
-        <table class="past-training__table">
-          <thead>
-            <tr>
-              <th scope="col" [attr.aria-sort]="ariaSort('date')">
-                <button type="button" class="past-training__sort-button" (click)="toggleSort('date', $event)"
-                  title="Click to sort by Date. Shift+click to include, Ctrl/Cmd+click to remove.">
-                  <span>Date</span>
-                  @if (sortMeta('date'); as dateSort) {
-                  <mat-icon class="past-training__sort-icon">
-                    {{ dateSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-                  </mat-icon>
-                  <span class="past-training__sort-order" aria-hidden="true">{{ dateSort.position }}</span>
-                  }
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="ariaSort('name')">
-                <button type="button" class="past-training__sort-button" (click)="toggleSort('name', $event)"
-                  title="Click to sort by Name. Shift+click to include, Ctrl/Cmd+click to remove.">
-                  <span>Name</span>
-                  @if (sortMeta('name'); as nameSort) {
-                  <mat-icon class="past-training__sort-icon">
-                    {{ nameSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-                  </mat-icon>
-                  <span class="past-training__sort-order" aria-hidden="true">{{ nameSort.position }}</span>
-                  }
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="ariaSort('duration')">
-                <button type="button" class="past-training__sort-button" (click)="toggleSort('duration', $event)"
-                  title="Click to sort by Duration. Shift+click to include, Ctrl/Cmd+click to remove.">
-                  <span>Duration</span>
-                  @if (sortMeta('duration'); as durationSort) {
-                  <mat-icon class="past-training__sort-icon">
-                    {{ durationSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-                  </mat-icon>
-                  <span class="past-training__sort-order" aria-hidden="true">{{ durationSort.position }}</span>
-                  }
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="ariaSort('calories')">
-                <button type="button" class="past-training__sort-button" (click)="toggleSort('calories', $event)"
-                  title="Click to sort by Calories. Shift+click to include, Ctrl/Cmd+click to remove.">
-                  <span>Calories</span>
-                  @if (sortMeta('calories'); as caloriesSort) {
-                  <mat-icon class="past-training__sort-icon">
-                    {{ caloriesSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-                  </mat-icon>
-                  <span class="past-training__sort-order" aria-hidden="true">{{ caloriesSort.position }}</span>
-                  }
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (pagedExercises().length === 0) {
-            <tr>
-              <td colspan="5" class="past-training__empty">
-                No workouts match your filter yet.
-              </td>
-            </tr>
-            } @else {
-            @for (exercise of pagedExercises(); track trackExercise($index, exercise)) {
-            <tr>
-              <td>{{ exercise.date | date: 'mediumDate' }}</td>
-              <td>{{ exercise.Name }}</td>
-              <td>{{ formatDuration(exercise.Duration) }}</td>
-              <td>{{ exercise.calories | number:'1.2-2' }}</td>
-            </tr>
+      <div class="past-training__lists">
+        <section class="past-training__section">
+          <h3>Aerobic Exercises</h3>
+          <mat-form-field class="past-training__filter">
+            <mat-label>Filter Aerobic</mat-label>
+            <input matInput placeholder="Search by name" [value]="aerobicFilter()"
+              (input)="updateAerobicFilter($any($event.target).value)" />
+            @if (aerobicFilter()) {
+            <button mat-icon-button matSuffix (click)="clearAerobicFilter()" type="button" class="clear-button">
+              <mat-icon class="clear-icon">close</mat-icon>
+            </button>
             }
-            }
-          </tbody>
-        </table>
-      </div>
+          </mat-form-field>
+          <div class="past-training__table-wrapper">
+            <table class="past-training__table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Duration</th>
+                  <th>Calories</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (pagedAerobicExercises().length === 0) {
+                <tr>
+                  <td colspan="4" class="past-training__empty">No aerobic exercises found.</td>
+                </tr>
+                } @else {
+                @for (ex of pagedAerobicExercises(); track ex.id) {
+                <tr>
+                  <td>{{ ex.date | date:'mediumDate' }}</td>
+                  <td>{{ ex.Name }}</td>
+                  <td>{{ formatDuration(ex.Duration) }}</td>
+                  <td>{{ ex.calories | number:'1.2-2' }}</td>
+                </tr>
+                }
+                }
+              </tbody>
+            </table>
+          </div>
+          <mat-paginator [length]="filteredAerobicExercises().length" [pageIndex]="aerobicPageIndex()"
+            [pageSize]="aerobicPageSize()" [pageSizeOptions]="pageSizeOptions"
+            (page)="onAerobicPageChange($event)"></mat-paginator>
+        </section>
 
-      <mat-paginator class="past-training__paginator" [length]="filteredExercises().length" [pageIndex]="pageIndex()"
-        [pageSize]="pageSize()" [pageSizeOptions]="pageSizeOptions" (page)="onPageChange($event)"></mat-paginator>
+        <section class="past-training__section">
+          <h3>Resistance Exercises</h3>
+          <mat-form-field class="past-training__filter">
+            <mat-label>Filter Resistance</mat-label>
+            <input matInput placeholder="Search by name" [value]="resistanceFilter()"
+              (input)="updateResistanceFilter($any($event.target).value)" />
+            @if (resistanceFilter()) {
+            <button mat-icon-button matSuffix (click)="clearResistanceFilter()" type="button" class="clear-button">
+              <mat-icon class="clear-icon">close</mat-icon>
+            </button>
+            }
+          </mat-form-field>
+          <div class="past-training__table-wrapper">
+            <table class="past-training__table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Weight</th>
+                  <th>Reps</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (pagedResistanceExercises().length === 0) {
+                <tr>
+                  <td colspan="4" class="past-training__empty">No resistance exercises found.</td>
+                </tr>
+                } @else {
+                @for (ex of pagedResistanceExercises(); track ex.id) {
+                <tr>
+                  <td>{{ ex.date | date:'mediumDate' }}</td>
+                  <td>{{ ex.Name }}</td>
+                  <td>{{ ex.weight }}</td>
+                  <td>{{ ex.reps }}</td>
+                </tr>
+                }
+                }
+              </tbody>
+            </table>
+          </div>
+          <mat-paginator [length]="filteredResistanceExercises().length" [pageIndex]="resistancePageIndex()"
+            [pageSize]="resistancePageSize()" [pageSizeOptions]="pageSizeOptions"
+            (page)="onResistancePageChange($event)"></mat-paginator>
+        </section>
+      </div>
     </mat-card-content>
   </mat-card>
 </section>

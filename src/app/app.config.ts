@@ -11,6 +11,7 @@ import { provideEffects } from '@ngrx/effects';
 import { UiEffects } from './shared/ui.effects';
 import { TrainingEffects } from './Components/training/training.effects';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyD97S1Gm8DjdBrc_mrmknk0KXvdrqSO42M",
@@ -32,8 +33,9 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => getAuth()),
     provideStore(reducers),
     provideEffects(UiEffects, TrainingEffects),
+    provideCharts(withDefaultRegisterables()),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
+      enabled: !isDevMode() && (typeof window !== 'undefined' ? window.location.hostname !== 'localhost' : true),
       registrationStrategy: 'registerWhenStable:30000'
     })
   ]

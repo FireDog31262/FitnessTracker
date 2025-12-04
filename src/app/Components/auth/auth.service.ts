@@ -93,14 +93,21 @@ export class AuthService {
 
       const uid = firebaseUser.uid; // The unique ID from Firebase Authentication!
 
-      const age = new Date().getFullYear() - userData.birthday.getFullYear();
+      const today = new Date();
+      const birthDate = userData.birthday;
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
       if (age < 18) {
         throw new Error('User must be at least 18 years old to register.');
       }
       const userProfileData = {
         email: userData.email,
         name: userData.name,
-        birthdate: userData.birthday, // Use server timestamp for consistency
+        birthday: userData.birthday, // Use server timestamp for consistency
         age: age,
         // Add any other initial user profile data here
       };
@@ -119,7 +126,8 @@ export class AuthService {
   private buildUserFromAuth(uid: string, email: string | null, displayName: string | null, firestoreData: Record<string, unknown> | null): User {
     const nameFromProfile = firestoreData?.['name'] ?? displayName ?? '';
     const birthdate = firestoreData?.['birthdate'];
-    const weight = firestoreData?.['weight'] as number | undefined;
+    const currentWeight = (firestoreData?.['currentWeight'] ?? firestoreData?.['weight']) as number | undefined;
+    const goalWeight = firestoreData?.['goalWeight'] as number | undefined;
     const weightUnit = firestoreData?.['weightUnit'] as 'kg' | 'lb' | undefined;
     const height = firestoreData?.['height'] as number | undefined;
     const heightUnit = firestoreData?.['heightUnit'] as 'cm' | 'ft_in' | undefined;
@@ -139,7 +147,8 @@ export class AuthService {
       email: email ?? '',
       name: String(nameFromProfile ?? ''),
       birthday: birthdayDate,
-      weight,
+      currentWeight,
+      goalWeight,
       weightUnit,
       height,
       heightUnit

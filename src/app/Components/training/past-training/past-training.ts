@@ -1,31 +1,33 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { TrainingService } from '../training.service';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from "@angular/material/card";
 import { Exercise } from '../excercise.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { PastTrainingPreferencesService } from './past-training-preferences.service';
 import {
-  DEFAULT_PAGE_INDEX,
-  DEFAULT_PAGE_SIZE,
   defaultSortOrder,
   SortColumn,
-  SortDescriptor,
-  SortDirection
+  SortDescriptor
 } from './past-training-sort.model';
 import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../app.reducer';
 import * as UI from '../../../shared/ui.actions';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { DatePipe, DecimalPipe } from '@angular/common';
+
+const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_INDEX = 0;
 
 @Component({
   selector: 'app-past-training',
   imports: [
     CommonModule,
     DatePipe,
+    DecimalPipe,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule, MatIconModule,
@@ -46,16 +48,25 @@ export class PastTraining implements OnInit, OnDestroy {
   private saveTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private readonly preferencesToastMessage = 'Past workouts preferences saved.';
 
-  protected readonly filter = signal('');
-  protected readonly pageIndex = signal(DEFAULT_PAGE_INDEX);
-  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  protected readonly aerobicFilter = signal('');
+  protected readonly resistanceFilter = signal('');
+  protected readonly aerobicPageIndex = signal(DEFAULT_PAGE_INDEX);
+  protected readonly aerobicPageSize = signal(DEFAULT_PAGE_SIZE);
+  protected readonly resistancePageIndex = signal(DEFAULT_PAGE_INDEX);
+  protected readonly resistancePageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly pageSizeOptions = [5, 10, 20];
-  protected readonly sortOrder = signal<SortDescriptor[]>(defaultSortOrder());
-  protected readonly hasCustomSort = computed(() => !this.isDefaultSort(this.sortOrder()));
 
-  protected readonly filteredExercises = computed(() => {
-    const term = this.filter().trim().toLowerCase();
-    const data = this.trainingService.finishedExercises();
+  protected readonly allAerobicExercises = computed(() => {
+    return this.trainingService.finishedExercises().filter(ex => ex.type === 'aerobic' || !ex.type);
+  });
+
+  protected readonly allResistanceExercises = computed(() => {
+    return this.trainingService.finishedExercises().filter(ex => ex.type === 'resistance');
+  });
+
+  protected readonly filteredAerobicExercises = computed(() => {
+    const term = this.aerobicFilter().trim().toLowerCase();
+    const data = this.allAerobicExercises();
     if (!term) {
       return data;
     }
@@ -73,55 +84,64 @@ export class PastTraining implements OnInit, OnDestroy {
     });
   });
 
-  protected readonly sortedExercises = computed(() => {
-    const descriptors = this.sortOrder();
-    const data = [...this.filteredExercises()];
-
-    const getComparableValue = (exercise: Exercise, column: SortColumn): number | string => {
-      switch (column) {
-        case 'name':
-          return (exercise.Name ?? '').toLowerCase();
-        case 'duration':
-          return exercise.Duration ?? 0;
-        case 'calories':
-          return exercise.calories ?? 0;
-        case 'date':
-        default:
-          return exercise.date ? exercise.date.getTime() : 0;
-      }
-    };
-
-    const compare = (a: Exercise, b: Exercise): number => {
-      for (const descriptor of descriptors) {
-        const valueA = getComparableValue(a, descriptor.column);
-        const valueB = getComparableValue(b, descriptor.column);
-        if (valueA === valueB) {
-          continue;
-        }
-        const directionMultiplier = descriptor.direction === 'asc' ? 1 : -1;
-        if (typeof valueA === 'number' && typeof valueB === 'number') {
-          return (valueA - valueB) * directionMultiplier;
-        }
-        return (valueA as string).localeCompare(valueB as string) * directionMultiplier;
-      }
-      return 0;
-    };
-
-    return descriptors.length ? data.sort(compare) : data;
+  protected readonly filteredResistanceExercises = computed(() => {
+    const term = this.resistanceFilter().trim().toLowerCase();
+    const data = this.allResistanceExercises();
+    if (!term) {
+      return data;
+    }
+    return data.filter((exercise) => {
+      const haystack = [
+        exercise.Name,
+        exercise.date?.toISOString(),
+        exercise.weight?.toString(),
+        exercise.reps?.toString()
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
   });
 
-  protected readonly pagedExercises = computed(() => {
-    const start = this.pageIndex() * this.pageSize();
-    return this.sortedExercises().slice(start, start + this.pageSize());
+  protected readonly pagedAerobicExercises = computed(() => {
+    const start = this.aerobicPageIndex() * this.aerobicPageSize();
+    return this.filteredAerobicExercises().slice(start, start + this.aerobicPageSize());
   });
+
+  protected readonly pagedResistanceExercises = computed(() => {
+    const start = this.resistancePageIndex() * this.resistancePageSize();
+    return this.filteredResistanceExercises().slice(start, start + this.resistancePageSize());
+  });
+
+  protected formatDuration(duration: number | undefined): string {
+    if (duration === undefined || duration === null || duration === 0) {
+      return '0s';
+    }
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  }
 
   constructor() {
     effect(() => {
-      const total = this.filteredExercises().length;
-      const size = this.pageSize();
+      const total = this.filteredAerobicExercises().length;
+      const size = this.aerobicPageSize();
       const maxIndex = Math.max(Math.ceil(total / size) - 1, 0);
-      if (this.pageIndex() > maxIndex) {
-        this.pageIndex.set(maxIndex);
+      if (this.aerobicPageIndex() > maxIndex) {
+        this.aerobicPageIndex.set(maxIndex);
+      }
+    });
+
+    effect(() => {
+      const total = this.filteredResistanceExercises().length;
+      const size = this.resistancePageSize();
+      const maxIndex = Math.max(Math.ceil(total / size) - 1, 0);
+      if (this.resistancePageIndex() > maxIndex) {
+        this.resistancePageIndex.set(maxIndex);
       }
     });
 
@@ -146,129 +166,64 @@ export class PastTraining implements OnInit, OnDestroy {
     this.clearScheduledSave();
   }
 
-  updateFilter(value: string) {
-    if (value === this.filter()) {
+  updateAerobicFilter(value: string) {
+    if (value === this.aerobicFilter()) {
       return;
     }
-    this.filter.set(value);
-    this.pageIndex.set(0);
+    this.aerobicFilter.set(value);
+    this.aerobicPageIndex.set(0);
     this.markPreferencesDirty();
   }
 
-  clearFilter() {
-    this.updateFilter('');
+  clearAerobicFilter() {
+    this.updateAerobicFilter('');
   }
 
-  onPageChange(event: PageEvent) {
-    const indexChanged = event.pageIndex !== this.pageIndex();
-    const sizeChanged = event.pageSize !== this.pageSize();
+  updateResistanceFilter(value: string) {
+    if (value === this.resistanceFilter()) {
+      return;
+    }
+    this.resistanceFilter.set(value);
+    this.resistancePageIndex.set(0);
+    this.markPreferencesDirty();
+  }
+
+  clearResistanceFilter() {
+    this.updateResistanceFilter('');
+  }
+
+  onAerobicPageChange(event: PageEvent) {
+    const indexChanged = event.pageIndex !== this.aerobicPageIndex();
+    const sizeChanged = event.pageSize !== this.aerobicPageSize();
     if (!indexChanged && !sizeChanged) {
       return;
     }
-    this.pageIndex.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
+    this.aerobicPageIndex.set(event.pageIndex);
+    this.aerobicPageSize.set(event.pageSize);
     this.markPreferencesDirty();
   }
 
-  protected toggleSort(column: SortColumn, event?: MouseEvent) {
-    const remove = !!event && (event.ctrlKey || event.metaKey);
-    const multi = !!event?.shiftKey && !remove;
-    let didChange = false;
-    this.sortOrder.update((current) => {
-      const existingIndex = current.findIndex((descriptor) => descriptor.column === column);
-      if (remove) {
-        if (existingIndex === -1) {
-          return current;
-        }
-        const next = [...current];
-        next.splice(existingIndex, 1);
-        didChange = true;
-        return next.length ? next : defaultSortOrder();
-      }
-      if (!multi) {
-        if (existingIndex === -1) {
-          didChange = true;
-          return [{ column, direction: 'asc' }];
-        }
-        const nextDirection = current[existingIndex].direction === 'asc' ? 'desc' : 'asc';
-        didChange = true;
-        return [{ column, direction: nextDirection }];
-      }
-
-      const next = [...current];
-      if (existingIndex === -1) {
-        didChange = true;
-        next.push({ column, direction: 'asc' });
-        return next;
-      }
-
-      const descriptor = next[existingIndex];
-      next[existingIndex] = {
-        column,
-        direction: descriptor.direction === 'asc' ? 'desc' : 'asc'
-      };
-      didChange = true;
-      return next;
-    });
-    if (didChange) {
-      this.pageIndex.set(0);
-      this.markPreferencesDirty();
-    }
-  }
-
-  protected ariaSort(column: SortColumn): 'none' | 'ascending' | 'descending' {
-    const primary = this.sortOrder()[0];
-    if (!primary || primary.column !== column) {
-      return 'none';
-    }
-    return primary.direction === 'asc' ? 'ascending' : 'descending';
-  }
-
-  protected sortMeta(column: SortColumn): { direction: SortDirection; position: number } | null {
-    const order = this.sortOrder();
-    const index = order.findIndex((descriptor) => descriptor.column === column);
-    if (index === -1) {
-      return null;
-    }
-    return {
-      direction: order[index].direction,
-      position: index + 1
-    };
-  }
-
-  protected clearSortOrder() {
-    if (!this.hasCustomSort()) {
+  onResistancePageChange(event: PageEvent) {
+    const indexChanged = event.pageIndex !== this.resistancePageIndex();
+    const sizeChanged = event.pageSize !== this.resistancePageSize();
+    if (!indexChanged && !sizeChanged) {
       return;
     }
-    this.sortOrder.set(defaultSortOrder());
-    this.pageIndex.set(0);
+    this.resistancePageIndex.set(event.pageIndex);
+    this.resistancePageSize.set(event.pageSize);
     this.markPreferencesDirty();
-  }
-
-  protected formatDuration(duration: number | undefined): string {
-    if (!duration) {
-      return '0s';
-    }
-    const minutes = Math.floor(duration / 60);
-    const seconds = Math.floor(duration % 60);
-    if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
-    }
-    return `${seconds}s`;
-  }
-
-  protected trackExercise(index: number, exercise: Exercise) {
-    return exercise.id ?? `${exercise.Name}-${index}`;
   }
 
   private async hydratePreferences(userId: string): Promise<void> {
     try {
       const stored = await this.preferencesService.loadPreferences(userId);
       if (stored) {
-        this.sortOrder.set(stored.sortOrder.length ? stored.sortOrder : defaultSortOrder());
-        this.filter.set(stored.filter ?? '');
-        this.pageSize.set(this.sanitizePageSize(stored.pageSize));
-        this.pageIndex.set(this.sanitizePageIndex(stored.pageIndex));
+        this.aerobicFilter.set(stored.aerobicFilter);
+        this.resistanceFilter.set(stored.resistanceFilter);
+        this.aerobicPageSize.set(stored.aerobicPageSize);
+        this.aerobicPageIndex.set(stored.aerobicPageIndex);
+        this.resistancePageSize.set(stored.resistancePageSize);
+        this.resistancePageIndex.set(stored.resistancePageIndex);
       } else {
         this.resetToDefaults();
       }
@@ -278,21 +233,12 @@ export class PastTraining implements OnInit, OnDestroy {
   }
 
   private resetToDefaults() {
-    this.sortOrder.set(defaultSortOrder());
-    this.filter.set('');
-    this.pageSize.set(DEFAULT_PAGE_SIZE);
-    this.pageIndex.set(DEFAULT_PAGE_INDEX);
-  }
-
-  private sanitizePageSize(size: number | undefined): number {
-    return this.pageSizeOptions.includes(size ?? 0) ? (size as number) : this.pageSizeOptions[0];
-  }
-
-  private sanitizePageIndex(index: number | undefined): number {
-    if (typeof index !== 'number' || !Number.isFinite(index) || index < 0) {
-      return DEFAULT_PAGE_INDEX;
-    }
-    return Math.floor(index);
+    this.aerobicFilter.set('');
+    this.resistanceFilter.set('');
+    this.aerobicPageIndex.set(DEFAULT_PAGE_INDEX);
+    this.aerobicPageSize.set(DEFAULT_PAGE_SIZE);
+    this.resistancePageIndex.set(DEFAULT_PAGE_INDEX);
+    this.resistancePageSize.set(DEFAULT_PAGE_SIZE);
   }
 
   private markPreferencesDirty() {
@@ -327,10 +273,13 @@ export class PastTraining implements OnInit, OnDestroy {
     }
     try {
       await this.preferencesService.savePreferences(user.id, {
-        sortOrder: this.sortOrder(),
-        filter: this.filter(),
-        pageSize: this.pageSize(),
-        pageIndex: this.pageIndex()
+        sortOrder: [], // Sort order is not yet implemented per table
+        aerobicFilter: this.aerobicFilter(),
+        resistanceFilter: this.resistanceFilter(),
+        aerobicPageSize: this.aerobicPageSize(),
+        aerobicPageIndex: this.aerobicPageIndex(),
+        resistancePageSize: this.resistancePageSize(),
+        resistancePageIndex: this.resistancePageIndex()
       });
       this.store.dispatch(
         new UI.ShowSnackbar({
@@ -348,16 +297,5 @@ export class PastTraining implements OnInit, OnDestroy {
         })
       );
     }
-  }
-
-  private isDefaultSort(order: SortDescriptor[]): boolean {
-    const baseline = defaultSortOrder();
-    if (order.length !== baseline.length) {
-      return false;
-    }
-    return order.every((descriptor, index) => {
-      const reference = baseline[index];
-      return descriptor.column === reference.column && descriptor.direction === reference.direction;
-    });
   }
 }

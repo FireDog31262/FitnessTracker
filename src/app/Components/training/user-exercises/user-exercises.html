@@ -11,6 +11,14 @@
           <mat-error>Name is required.</mat-error>
         </mat-form-field>
 
+        <mat-form-field>
+          <mat-label>Type</mat-label>
+          <mat-select formControlName="type">
+            <mat-option value="aerobic">Aerobic</mat-option>
+            <mat-option value="resistance">Resistance</mat-option>
+          </mat-select>
+        </mat-form-field>
+
         <button type="submit" mat-raised-button color="primary" [disabled]="exerciseForm.invalid">
           Add Exercise
         </button>
@@ -28,7 +36,7 @@
         <mat-list-item>
           <mat-icon matListItemIcon>fitness_center</mat-icon>
           <div matListItemTitle>{{ exercise.Name }}</div>
-          <div matListItemLine>User Exercise</div>
+          <div matListItemLine>{{ exercise.type | titlecase }}</div>
         </mat-list-item>
         } @empty {
         <p>No user exercises found.</p>

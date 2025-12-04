@@ -68,11 +68,11 @@ export class TrainingEffects {
           map((snapshot) =>
             snapshot.docs.map((doc) => {
               const payload = doc.data() as Record<string, unknown>;
-              return {
+              const type = (payload?.['type'] ?? 'aerobic') as 'aerobic' | 'resistance';
+              const exercise: Exercise = {
                 id: doc.id ?? (payload?.['id'] as string) ?? '',
                 Name: (payload?.['name'] ?? payload?.['Name'] ?? '') as string,
-                Duration: (payload?.['duration'] ?? payload?.['Duration'] ?? 0) as number,
-                calories: (payload?.['calories'] ?? 0) as number,
+                type: type,
                 date: payload?.['date']
                   ? typeof payload['date'] === 'string'
                     ? new Date(payload['date'] as string)
@@ -80,7 +80,17 @@ export class TrainingEffects {
                   : undefined,
                 state: (payload?.['state'] as 'completed' | 'cancelled' | null) ?? null,
                 userId: payload?.['userId'] as string | undefined
-              } as Exercise;
+              };
+
+              if (type === 'resistance') {
+                exercise.weight = (payload?.['weight'] ?? 0) as number;
+                exercise.reps = (payload?.['reps'] ?? 0) as number;
+              } else {
+                exercise.Duration = (payload?.['duration'] ?? payload?.['Duration'] ?? 0) as number;
+                exercise.calories = (payload?.['calories'] ?? 0) as number;
+              }
+
+              return exercise;
             })
           ),
           tap((exercises) => this.trainingService.setFinishedExercises(exercises)),

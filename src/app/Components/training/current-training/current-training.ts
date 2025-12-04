@@ -6,10 +6,21 @@ import { MatButtonModule } from "@angular/material/button";
 import { TrainingService } from '../training.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-current-training',
-  imports: [MatProgressSpinnerModule, MatButtonModule, DatePipe, DecimalPipe],
+  imports: [
+    MatProgressSpinnerModule,
+    MatButtonModule,
+    DatePipe,
+    DecimalPipe,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule
+  ],
   templateUrl: './current-training.html',
   styleUrl: './current-training.less',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -18,6 +29,10 @@ export class CurrentTraining implements OnDestroy {
   protected readonly progress = signal(0);
   protected readonly elapsedSeconds = signal(0);
   protected readonly isCustom = signal(false);
+  protected readonly isResistance = computed(() => this.trainingService.runningExercise()?.type === 'resistance');
+
+  protected weight = 0;
+  protected reps = 0;
 
   private timer: number | undefined;
   private readonly dialog = inject(MatDialog);
@@ -36,7 +51,10 @@ export class CurrentTraining implements OnDestroy {
       }
 
       this.isCustom.set(exercise.Duration === undefined || exercise.Duration === null);
-      this.startTimer(exercise.Duration);
+
+      if (!this.isResistance()) {
+        this.startTimer(exercise.Duration);
+      }
     });
   }
 
@@ -50,7 +68,7 @@ export class CurrentTraining implements OnDestroy {
 
     if (this.isCustom()) {
       // For custom exercises, "Stop" means "Finish"
-      this.trainingService.completeExercise(this.elapsedSeconds());
+      this.trainingService.completeExercise({ duration: this.elapsedSeconds() });
       return;
     }
 
@@ -65,6 +83,10 @@ export class CurrentTraining implements OnDestroy {
           this.startTimer(exercise.Duration);
         }
       });
+  }
+
+  onFinishResistance() {
+    this.trainingService.completeExercise({ weight: this.weight, reps: this.reps });
   }
 
   ngOnDestroy(): void {

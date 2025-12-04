@@ -41,7 +41,7 @@ export class TrainingService {
     this.runningExerciseSignal.set(selectedExercise ? { ...selectedExercise } : null);
   }
 
-  completeExercise(actualDuration?: number) {
+  completeExercise(result?: { duration?: number, weight?: number, reps?: number }) {
     const currentExercise = this.runningExerciseSignal();
     const user = this.userSignal();
     if (!currentExercise || !user) {
@@ -53,34 +53,34 @@ export class TrainingService {
       return;
     }
 
-    let duration = currentExercise.Duration;
-    let calories = currentExercise.calories;
+    const exerciseToSave: Exercise = {
+      ...currentExercise,
+      date: new Date(),
+      state: 'completed',
+      userId: user.id
+    };
 
-    if (actualDuration !== undefined) {
-      duration = actualDuration;
-      // If it's a custom exercise (no predefined calories), calculate based on a default rate or similar.
-      // If it's a standard exercise, we might want to adjust calories based on actual duration vs expected?
-      // But usually standard exercises complete when the timer finishes, so actual == expected.
-      // For custom exercises, we need a way to calculate calories.
-      // Let's assume a default burn rate of 5 kcal/min (approx 0.083 kcal/sec) if not defined.
-      if (currentExercise.calories === undefined || currentExercise.calories === null) {
-         calories = duration * (5 / 60); // 5 kcal per minute
-      } else {
-         // If we have defined calories (e.g. standard exercise finished early?), use the defined value?
-         // Or scale it? Standard exercises usually finish at 100%.
-         calories = currentExercise.calories;
+    if (currentExercise.type === 'resistance') {
+      exerciseToSave.weight = result?.weight ?? 0;
+      exerciseToSave.reps = result?.reps ?? 0;
+      delete exerciseToSave.Duration;
+      delete exerciseToSave.calories;
+    } else {
+      // Default to aerobic
+      exerciseToSave.type = 'aerobic';
+      const duration = result?.duration ?? currentExercise.Duration ?? 0;
+      let calories = currentExercise.calories;
+      if (calories === undefined || calories === null) {
+        calories = duration * (5 / 60);
       }
+      exerciseToSave.Duration = duration;
+      exerciseToSave.calories = calories;
+      delete exerciseToSave.weight;
+      delete exerciseToSave.reps;
     }
 
     this.store.dispatch(new PersistExerciseResult({
-      exercise: {
-        ...currentExercise,
-        Duration: duration,
-        calories: calories,
-        date: new Date(),
-        state: 'completed',
-        userId: user.id
-      }
+      exercise: exerciseToSave
     }));
     this.runningExerciseSignal.set(null);
   }

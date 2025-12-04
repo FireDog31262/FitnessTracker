@@ -22,9 +22,12 @@ export class PastTrainingPreferencesService {
       const data = snapshot.data();
       return {
         sortOrder: sanitizeSortDescriptors(data?.['pastTrainingSort']),
-        filter: this.sanitizeFilter(data?.['pastTrainingFilter']) ?? '',
-        pageSize: this.sanitizePageSize(data?.['pastTrainingPageSize']),
-        pageIndex: this.sanitizePageIndex(data?.['pastTrainingPageIndex'])
+        aerobicFilter: this.sanitizeFilter(data?.['aerobicFilter']),
+        resistanceFilter: this.sanitizeFilter(data?.['resistanceFilter']),
+        aerobicPageSize: this.sanitizePageSize(data?.['aerobicPageSize']),
+        aerobicPageIndex: this.sanitizePageIndex(data?.['aerobicPageIndex']),
+        resistancePageSize: this.sanitizePageSize(data?.['resistancePageSize']),
+        resistancePageIndex: this.sanitizePageIndex(data?.['resistancePageIndex'])
       };
     } catch (error) {
       console.error('❌ Error loading past-training preferences:', error);
@@ -39,9 +42,12 @@ export class PastTrainingPreferencesService {
         ref,
         {
           pastTrainingSort: preferences.sortOrder,
-          pastTrainingFilter: preferences.filter,
-          pastTrainingPageSize: preferences.pageSize,
-          pastTrainingPageIndex: preferences.pageIndex
+          aerobicFilter: preferences.aerobicFilter,
+          resistanceFilter: preferences.resistanceFilter,
+          aerobicPageSize: preferences.aerobicPageSize,
+          aerobicPageIndex: preferences.aerobicPageIndex,
+          resistancePageSize: preferences.resistancePageSize,
+          resistancePageIndex: preferences.resistancePageIndex
         },
         { merge: true }
       );

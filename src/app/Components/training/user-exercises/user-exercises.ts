@@ -6,10 +6,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { TrainingService } from '../training.service';
 import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../app.reducer';
 import { Exercise } from '../excercise.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-user-exercises',
@@ -21,7 +23,9 @@ import { Exercise } from '../excercise.model';
     MatFormFieldModule,
     MatInputModule,
     MatListModule,
-    MatIconModule
+    MatIconModule,
+    MatSelectModule,
+    CommonModule
   ],
   templateUrl: './user-exercises.html',
   styleUrl: './user-exercises.less',
@@ -47,7 +51,8 @@ export class UserExercises implements OnInit {
 
   constructor(private fb: FormBuilder) {
     this.exerciseForm = this.fb.group({
-      name: ['', Validators.required]
+      name: ['', Validators.required],
+      type: ['aerobic', Validators.required]
     });
   }
 
@@ -60,10 +65,11 @@ export class UserExercises implements OnInit {
       const newExercise: Exercise = {
         id: '', // Firestore will generate ID
         Name: this.exerciseForm.value.name,
+        type: this.exerciseForm.value.type,
         userId: this.userSignal()?.id
       };
       this.trainingService.addUserExercise(newExercise);
-      this.exerciseForm.reset();
+      this.exerciseForm.reset({ type: 'aerobic' });
     }
   }
 }

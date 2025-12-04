@@ -41,7 +41,8 @@ export class Profile implements OnInit {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       birthday: [null, Validators.required],
-      weight: [null, [Validators.min(0)]],
+      currentWeight: [null, [Validators.min(0)]],
+      goalWeight: [null, [Validators.min(0)]],
       weightUnit: ['kg', Validators.required],
       height: [null, [Validators.min(0)]],
       heightUnit: ['cm', Validators.required],
@@ -67,7 +68,8 @@ export class Profile implements OnInit {
       this.profileForm.patchValue({
         name: user.name,
         birthday: user.birthday,
-        weight: user.weight,
+        currentWeight: user.currentWeight,
+        goalWeight: user.goalWeight,
         weightUnit: user.weightUnit || 'kg',
         height: height,
         heightUnit: heightUnit,

@@ -1,4 +1,16 @@
 <section class="current-training">
+  @if (isResistance()) {
+  <h1 class="resistance-title">Resistance Training</h1>
+  <mat-form-field appearance="outline">
+    <mat-label>Weight</mat-label>
+    <input matInput type="number" [(ngModel)]="weight" placeholder="Weight">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Reps</mat-label>
+    <input matInput type="number" [(ngModel)]="reps" placeholder="Reps">
+  </mat-form-field>
+  <button mat-raised-button color="primary" (click)="onFinishResistance()">Finish</button>
+  } @else {
   @if (isCustom()) {
   <mat-progress-spinner mode="indeterminate" />
   <h1>{{ elapsedSeconds() * 1000 | date:'mm:ss' }}</h1>
@@ -10,4 +22,5 @@
   <button mat-raised-button color="accent" type="button" (click)="onStop()">
     {{ isCustom() ? 'Finish' : 'Stop' }}
   </button>
+  }
 </section>
