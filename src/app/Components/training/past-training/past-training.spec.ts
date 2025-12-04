@@ -9,9 +9,12 @@ class PastTrainingPreferencesServiceStub {
   loadPreferences(): Promise<PastTrainingPreferences> {
     return Promise.resolve({
       sortOrder: [],
-      filter: '',
-      pageSize: 5,
-      pageIndex: 0
+      aerobicFilter: '',
+      resistanceFilter: '',
+      aerobicPageSize: 5,
+      aerobicPageIndex: 0,
+      resistancePageSize: 5,
+      resistancePageIndex: 0
     });
   }
 
