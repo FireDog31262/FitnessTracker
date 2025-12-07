@@ -22,12 +22,13 @@
                   <th>Name</th>
                   <th>Duration</th>
                   <th>Calories</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 @if (pagedAerobicExercises().length === 0) {
                 <tr>
-                  <td colspan="4" class="past-training__empty">No aerobic exercises found.</td>
+                  <td colspan="5" class="past-training__empty">No aerobic exercises found.</td>
                 </tr>
                 } @else {
                 @for (ex of pagedAerobicExercises(); track ex.id) {
@@ -36,6 +37,11 @@
                   <td>{{ ex.Name }}</td>
                   <td>{{ formatDuration(ex.Duration) }}</td>
                   <td>{{ ex.calories | number:'1.2-2' }}</td>
+                  <td>
+                    <button mat-icon-button (click)="shareExercise(ex)" aria-label="Share exercise">
+                      <mat-icon>share</mat-icon>
+                    </button>
+                  </td>
                 </tr>
                 }
                 }
@@ -67,12 +73,13 @@
                   <th>Name</th>
                   <th>Weight</th>
                   <th>Reps</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 @if (pagedResistanceExercises().length === 0) {
                 <tr>
-                  <td colspan="4" class="past-training__empty">No resistance exercises found.</td>
+                  <td colspan="5" class="past-training__empty">No resistance exercises found.</td>
                 </tr>
                 } @else {
                 @for (ex of pagedResistanceExercises(); track ex.id) {
@@ -81,6 +88,11 @@
                   <td>{{ ex.Name }}</td>
                   <td>{{ ex.weight }}</td>
                   <td>{{ ex.reps }}</td>
+                  <td>
+                    <button mat-icon-button (click)="shareExercise(ex)" aria-label="Share exercise">
+                      <mat-icon>share</mat-icon>
+                    </button>
+                  </td>
                 </tr>
                 }
                 }

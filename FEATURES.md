@@ -60,7 +60,7 @@ This document outlines the key features and functionality of the Fitness Tracker
 
 ## 5. Roadmap / Planned Features
 
-- [ ] **Social Sharing**: Allow users to share workout summaries on social media.
+- [x] **Social Sharing**: Allow users to share workout summaries on social media.
 - [x] **Charts & Analytics**: Visual graphs showing progress over time (e.g., calories burned per week).
 - [x] **User Exercises**: Enable users to add their own custom exercises to the list.
 - [x] **Profile Settings**: User profile management (avatar, weight, height).

@@ -158,6 +158,39 @@ export class PastTraining implements OnInit, OnDestroy {
     });
   }
 
+  async shareExercise(exercise: Exercise) {
+    const text = this.getShareText(exercise);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Workout',
+          text: text,
+          url: window.location.href
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      this.store.dispatch(new UI.ShowSnackbar({
+        message: 'Sharing not supported on this browser. Copied to clipboard!',
+        action: 'Close',
+        duration: 3000
+      }));
+      navigator.clipboard.writeText(text);
+    }
+  }
+
+  private getShareText(exercise: Exercise): string {
+    const datePipe = new DatePipe('en-US');
+    const date = datePipe.transform(exercise.date, 'mediumDate');
+    if (exercise.type === 'resistance') {
+      return `I just completed a resistance workout: ${exercise.Name} on ${date}! ${exercise.weight}kg for ${exercise.reps} reps. #FitnessTracker`;
+    } else {
+      const duration = this.formatDuration(exercise.Duration);
+      return `I just completed an aerobic workout: ${exercise.Name} on ${date}! Duration: ${duration}, Calories: ${exercise.calories?.toFixed(2)}. #FitnessTracker`;
+    }
+  }
+
   ngOnInit() {
     void this.trainingService.fetchFinishedExercises();
   }

@@ -21,7 +21,7 @@ export class AuthService {
 
   readonly isLoggedIn = computed(() => this.authStatusSignal());
 
-  login(authData: AuthData) {
+  login(authData: AuthData, returnUrl?: string) {
     this.store.dispatch(new UI.StartLoading());
     signInWithEmailAndPassword(this.auth, authData.email, authData.password)
       .then(async result => {
@@ -31,7 +31,7 @@ export class AuthService {
         const userDocSnap = await getDoc(userDocRef);
 
         const authedUser = this.buildUserFromAuth(result.user.uid, result.user.email, result.user.displayName, userDocSnap.exists() ? userDocSnap.data() : null);
-        this.handleAuthSuccess(authedUser, '/training');
+        this.handleAuthSuccess(authedUser, returnUrl || '/training');
       })
       .catch(error => this.handleAuthFailure('Login', error));
   }
@@ -158,7 +158,7 @@ export class AuthService {
   private handleAuthSuccess(user: User, redirectUrl: string) {
     this.store.dispatch(new UI.StopLoading());
     this.store.dispatch(new AuthActions.SetAuthenticated({ user }));
-    this.router.navigate([redirectUrl]);
+    this.router.navigateByUrl(redirectUrl);
   }
 
   private handleAuthFailure(context: string, error: unknown) {

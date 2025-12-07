@@ -1,5 +1,5 @@
 @if (!ongoingTraining()) {
-<mat-tab-group>
+<mat-tab-group [selectedIndex]="selectedIndex()" (selectedIndexChange)="selectedIndex.set($event)">
   <mat-tab label="New Training">
     <app-new-training />
   </mat-tab>
