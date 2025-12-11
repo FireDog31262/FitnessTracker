@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import * as fromRoot from '../../app.reducer';
 import { AddUserExercise, LoadAvailableExercises, LoadFinishedExercises, PersistExerciseResult } from './training.actions';
 import * as UI from '../../shared/ui.actions';
+import { GamificationService } from '../gamification/gamification.service';
 
 @Injectable({ providedIn: 'root' })
 export class TrainingService {
@@ -18,6 +19,7 @@ export class TrainingService {
 
   private readonly store = inject(Store<fromRoot.State>);
   private readonly userSignal = this.store.selectSignal(fromRoot.getUser);
+  private readonly gamificationService = inject(GamificationService);
 
   fetchAvailableExercises(): void {
     this.store.dispatch(new LoadAvailableExercises());
@@ -82,6 +84,10 @@ export class TrainingService {
     this.store.dispatch(new PersistExerciseResult({
       exercise: exerciseToSave
     }));
+
+    // Trigger Gamification Update
+    void this.gamificationService.processFinishedExercise(exerciseToSave);
+
     this.runningExerciseSignal.set(null);
   }
 

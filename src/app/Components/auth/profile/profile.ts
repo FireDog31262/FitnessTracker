@@ -11,6 +11,8 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth.service';
 import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../app.reducer';
+import { LevelIndicatorComponent } from '../../gamification/level-indicator/level-indicator';
+import { AchievementsComponent } from '../../gamification/achievements/achievements';
 
 @Component({
   selector: 'app-profile',
@@ -24,7 +26,9 @@ import * as fromRoot from '../../../app.reducer';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    CommonModule
+    CommonModule,
+    LevelIndicatorComponent,
+    AchievementsComponent
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.less',

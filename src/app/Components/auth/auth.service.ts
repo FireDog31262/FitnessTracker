@@ -9,6 +9,7 @@ import * as fromRoot from '../../app.reducer';
 import * as UI from '../../shared/ui.actions';
 // import * as fromAuth from './auth.reducers';
 import * as AuthActions from './auth.actions';
+import { GamificationService } from '../gamification/gamification.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -18,6 +19,7 @@ export class AuthService {
   private readonly store = inject(Store<fromRoot.State>);
   private readonly userSignal = this.store.selectSignal(fromRoot.getUser);
   private readonly authStatusSignal = this.store.selectSignal(fromRoot.getIsAuthenticated);
+  private readonly gamificationService = inject(GamificationService);
 
   readonly isLoggedIn = computed(() => this.authStatusSignal());
 
@@ -158,6 +160,7 @@ export class AuthService {
   private handleAuthSuccess(user: User, redirectUrl: string) {
     this.store.dispatch(new UI.StopLoading());
     this.store.dispatch(new AuthActions.SetAuthenticated({ user }));
+    void this.gamificationService.fetchUserStats();
     this.router.navigateByUrl(redirectUrl);
   }
 

@@ -60,6 +60,10 @@ This document outlines the key features and functionality of the Fitness Tracker
 
 ## 5. Roadmap / Planned Features
 
+- [x] **Gamification & Achievements**:
+  - **Badges & Milestones**: Award digital badges for achievements like "7-Day Streak", "1000 Calories Burned", or "Early Bird Workout".
+  - **Leveling System**: Users gain XP for every workout and level up over time.
+- [ ] **Leaderboards**: If you want to enhance the social aspect, add a leaderboard to compare progress with friends or all users.
 - [x] **Social Sharing**: Allow users to share workout summaries on social media.
 - [x] **Charts & Analytics**: Visual graphs showing progress over time (e.g., calories burned per week).
 - [x] **User Exercises**: Enable users to add their own custom exercises to the list.

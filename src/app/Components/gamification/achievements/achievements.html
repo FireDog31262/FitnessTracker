@@ -1,0 +1,19 @@
+<div class="achievements-container">
+    <h3>Your Achievements</h3>
+
+    <div class="achievements-grid">
+        @for (ach of unlockedAchievements(); track ach.id) {
+        <mat-card class="achievement-card unlocked" [matTooltip]="ach.description">
+            <mat-icon class="achievement-icon">{{ ach.icon }}</mat-icon>
+            <div class="achievement-title">{{ ach.title }}</div>
+        </mat-card>
+        }
+
+        @for (ach of nextAchievements(); track ach.id) {
+        <mat-card class="achievement-card locked" [matTooltip]="ach.description">
+            <mat-icon class="achievement-icon">lock</mat-icon>
+            <div class="achievement-title">{{ ach.title }}</div>
+        </mat-card>
+        }
+    </div>
+</div>

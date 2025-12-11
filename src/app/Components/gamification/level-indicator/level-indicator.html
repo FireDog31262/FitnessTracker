@@ -1,0 +1,14 @@
+@if (stats(); as s) {
+<div class="level-container">
+    <div class="level-info">
+        <span class="level-badge">Lvl {{ s.level }}</span>
+        <span class="xp-text">{{ s.currentXP }} / {{ s.nextLevelXP }} XP</span>
+    </div>
+    <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
+    @if (s.streakDays > 0) {
+    <div class="streak-info">
+        🔥 {{ s.streakDays }} Day Streak!
+    </div>
+    }
+</div>
+}
