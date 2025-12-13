@@ -13,6 +13,8 @@ import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../app.reducer';
 import { LevelIndicatorComponent } from '../../gamification/level-indicator/level-indicator';
 import { AchievementsComponent } from '../../gamification/achievements/achievements';
+import { BiometricService } from '../biometric.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-profile',
@@ -37,7 +39,10 @@ import { AchievementsComponent } from '../../gamification/achievements/achieveme
 export class Profile implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly store = inject(Store<fromRoot.State>);
+  private readonly biometricService = inject(BiometricService);
+  private readonly snackBar = inject(MatSnackBar);
   protected readonly isLoading = this.store.selectSignal(fromRoot.getIsLoading);
+  protected canRegisterBiometrics = false;
 
   profileForm: FormGroup;
 
@@ -55,7 +60,8 @@ export class Profile implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit() {
+    this.canRegisterBiometrics = await this.biometricService.isBiometricAvailable();
     const user = this.authService.getUser();
     if (user) {
       const heightUnit = user.heightUnit || 'cm';
@@ -80,6 +86,16 @@ export class Profile implements OnInit {
         heightFeet: heightFeet,
         heightInches: heightInches
       });
+    }
+  }
+
+  async onRegisterBiometrics() {
+    try {
+      await this.biometricService.registerBiometric();
+      this.snackBar.open('Biometric passkey registered successfully!', 'Close', { duration: 3000 });
+    } catch (error) {
+      console.error(error);
+      this.snackBar.open('Failed to register passkey.', 'Close', { duration: 3000 });
     }
   }
 

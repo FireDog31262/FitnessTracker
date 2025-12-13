@@ -22,5 +22,11 @@
       <button type="submit" mat-raised-button color="primary" [disabled]="loginForm.invalid">Submit</button>
       }
     </div>
+
+    <div class="biometric-section" *ngIf="canLoginWithBiometrics" style="margin-top: 16px; text-align: center;">
+      <button type="button" mat-stroked-button color="accent" (click)="onLoginWithBiometrics()">
+        Login with Passkey
+      </button>
+    </div>
   </form>
 </section>

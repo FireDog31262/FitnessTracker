@@ -8,6 +8,9 @@ import * as fromRoot from '../../../app.reducer';
 import { Store } from '@ngrx/store';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { BiometricService } from '../biometric.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
@@ -16,7 +19,8 @@ import { ActivatedRoute } from '@angular/router';
     MatInputModule,
     MatButtonModule,
     ReactiveFormsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    CommonModule
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.less'],
@@ -27,7 +31,10 @@ export class Login implements OnInit {
   private readonly store = inject(Store<fromRoot.State>);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly route = inject(ActivatedRoute);
+  private readonly biometricService = inject(BiometricService);
+  private readonly snackBar = inject(MatSnackBar);
   protected readonly isLoading = this.store.selectSignal(fromRoot.getIsLoading);
+  protected canLoginWithBiometrics = false;
   private returnUrl: string | undefined;
 
   protected readonly loginForm = this.fb.group({
@@ -35,8 +42,22 @@ export class Login implements OnInit {
     password: this.fb.control('', { validators: [Validators.required, Validators.minLength(6)] })
   });
 
-  ngOnInit() {
+  async ngOnInit() {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    this.canLoginWithBiometrics = await this.biometricService.isBiometricAvailable();
+  }
+
+  async onLoginWithBiometrics() {
+    try {
+      await this.biometricService.loginWithBiometric();
+      // If successful, the service handles the auth state update via Firebase
+      // But we might want to redirect if needed, although AuthService usually handles that via effects or subscription
+      // For now, let's assume AuthService or the effect handles redirection upon successful login.
+      // However, BiometricService.loginWithBiometric calls signInWithCustomToken which should trigger auth state change.
+    } catch (error) {
+      console.error(error);
+      this.snackBar.open('Biometric login failed.', 'Close', { duration: 3000 });
+    }
   }
 
   protected get emailControl() {
