@@ -37,8 +37,14 @@ export class BiometricService {
   }
 
   async registerBiometric(): Promise<void> {
+    console.log('Starting biometric registration...');
     const user = this.auth.currentUser;
     if (!user) throw new Error('User must be logged in to register biometrics.');
+
+    // Check for IP address usage which often fails with WebAuthn
+    if (window.location.hostname !== 'localhost' && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname)) {
+      console.warn('WebAuthn may fail when using an IP address. Please use localhost or a valid domain with HTTPS.');
+    }
 
     // 1. Create Challenge
     const challenge = new Uint8Array(32);
@@ -92,6 +98,7 @@ export class BiometricService {
   }
 
   async loginWithBiometric(): Promise<void> {
+    console.log('Starting biometric login...');
     // 1. Create Challenge
     const challenge = new Uint8Array(32);
     window.crypto.getRandomValues(challenge);
@@ -150,7 +157,26 @@ export class BiometricService {
   }
 
   async isBiometricAvailable(): Promise<boolean> {
-    if (!window.PublicKeyCredential) return false;
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!window.PublicKeyCredential) {
+      console.warn('WebAuthn is not supported in this browser.');
+      return false;
+    }
+
+    // WebAuthn requires a secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      console.warn('WebAuthn requires a secure context (HTTPS or localhost).');
+      return false;
+    }
+
+    try {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        console.warn('No platform authenticator available. Ensure you have a screen lock (PIN/Pattern/Biometric) set up. If using an Emulator, enable biometric support.');
+      }
+      return available;
+    } catch (e) {
+      console.error('Error checking biometric availability:', e);
+      return false;
+    }
   }
 }
